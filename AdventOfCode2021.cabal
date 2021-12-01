@@ -1,0 +1,16 @@
+cabal-version:      2.4
+name:               AdventOfCode2021
+version:            0.1.0.0
+
+synopsis: Solutions to Advent of Code 2021
+license: Unlicense
+author:             CastilloDel
+maintainer:         delcastillodelarosadaniel@gmail.com
+
+executable day1
+    main-is:          Main.hs
+
+
+    build-depends:    base ^>=4.14.3.0
+    hs-source-dirs:   day1
+    default-language: Haskell2010
