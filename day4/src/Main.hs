@@ -5,6 +5,7 @@ main :: IO ()
 main = do
   (numbers, tables) <- parseInput . lines <$> readFile "day4/input"
   print $ firstProblem numbers tables
+  print $ secondProblem numbers tables
 
 newtype BingoTable = BingoTable [[Maybe Int]] deriving (Show)
 
@@ -60,3 +61,13 @@ checkBingo :: BingoTable -> Bool
 checkBingo (BingoTable table) = checkRow table || checkRow (transpose table)
   where
     checkRow = any (all isNothing)
+
+secondProblem :: [Int] -> [BingoTable] -> Maybe Int
+secondProblem [] tables = Nothing
+secondProblem (first : rest) tables =
+  if null incompleteTables
+    then (* first) <$> calculateBingo (head newTables)
+    else secondProblem rest incompleteTables
+  where
+    newTables = map (newNumber first) tables
+    incompleteTables = filter (not . checkBingo) newTables
