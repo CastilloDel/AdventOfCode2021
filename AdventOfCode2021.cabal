@@ -30,3 +30,9 @@ executable day4
     build-depends:    base ^>=4.14.3.0
     hs-source-dirs:   day4/src
     default-language: Haskell2010
+
+executable day5
+    main-is:          Main.hs
+    build-depends:    base ^>=4.14.3.0
+    hs-source-dirs:   day5/src
+    default-language: Haskell2010
