@@ -1,5 +1,4 @@
 import Data.List (sort)
-import Debug.Trace (trace)
 
 main :: IO ()
 main = do
