@@ -1,6 +1,5 @@
 import qualified Data.Bifunctor as Bifunctor
 import Data.List (findIndex, (\\))
-import Debug.Trace (trace)
 
 main :: IO ()
 main = do
