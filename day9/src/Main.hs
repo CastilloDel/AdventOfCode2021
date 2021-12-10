@@ -1,4 +1,5 @@
 import Data.Char (digitToInt)
+import Data.Ix (range)
 import Data.List (sort, (\\))
 import qualified Data.Map as Map
 
@@ -43,9 +44,7 @@ isLowPoint caveMap@CaveMap {height = height, width = width} index =
 
 getLowPoints :: CaveMap -> [(Int, Int)]
 getLowPoints caveMap@CaveMap {height = height, width = width} =
-  filter (isLowPoint caveMap) indexes
-  where
-    indexes = indexesFromSize height width
+  filter (isLowPoint caveMap) $ indexesFromSize height width
 
 getBasin :: CaveMap -> (Int, Int) -> [(Int, Int)]
 getBasin caveMap = getBasinIncomplete caveMap []
@@ -64,7 +63,7 @@ getAdjacentPositions (i, j) = [(i + 1, j), (i, j + 1), (i - 1, j), (i, j - 1)]
 
 indexesFromSize :: Int -> Int -> [(Int, Int)]
 indexesFromSize height width =
-  concatMap ((`zip` [0 .. width - 1]) . replicate width) [0 .. height - 1]
+  range ((0, 0), (height - 1, width - 1))
 
 firstProblem :: CaveMap -> Int
 firstProblem caveMap = sum $ map (+ 1) lowPointValues
