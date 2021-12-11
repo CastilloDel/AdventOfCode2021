@@ -1,5 +1,4 @@
 import Data.List (group, sort)
-import Debug.Trace (trace)
 
 timeToReproduce = 6
 
