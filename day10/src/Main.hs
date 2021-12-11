@@ -20,23 +20,18 @@ main = do
     readInput file = lines <$> readFile file
 
 firstProblem :: [String] -> Int
-firstProblem = sum . map checkPossibleErrorPoints . rights . map checkLineError
+firstProblem = sum . map (pointsForIllegalChar Map.!) . rights . map checkLineError
 
 checkLineError :: String -> Either String Char
 checkLineError = checkLineError' ""
   where
     checkLineError' stack [] = Left stack
     checkLineError' (c1 : stack) (c2 : string)
-      | Just c2 == Map.lookup c1 characterPairings = checkLineError' stack string
+      | c2 == characterPairings Map.! c1 = checkLineError' stack string
     checkLineError' stack (char : rest)
       | char `elem` ['(', '[', '{', '<'] = checkLineError' (char : stack) rest
       | char `elem` [')', ']', '}', '>'] = Right char
       | otherwise = error $ "Invalid character: " ++ [char]
-
-checkPossibleErrorPoints :: Char -> Int
-checkPossibleErrorPoints char = case Map.lookup char pointsForIllegalChar of
-  Just val -> val
-  Nothing -> error $ "Legal characters don't have puntuation: " ++ [char]
 
 secondProblem :: [String] -> Int
 secondProblem lines = sort pointsList !! (length pointsList `div` 2)

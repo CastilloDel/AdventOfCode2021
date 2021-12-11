@@ -24,11 +24,8 @@ caveMapFromMatrix matrix = CaveMap {height = height, width = width, contents = c
     contents = Map.fromList $ zip indexes $ concat matrix
     indexes = indexesFromSize height width
 
-strictLookup :: CaveMap -> (Int, Int) -> Int
-strictLookup CaveMap {contents = contents} key =
-  case Map.lookup key contents of
-    Just val -> val
-    Nothing -> error $ "Couldn't find an element with key: " ++ show key
+(!) :: CaveMap -> (Int, Int) -> Int
+(!) CaveMap {contents = contents} key = contents Map.! key
 
 isValidPoint :: CaveMap -> (Int, Int) -> Bool
 isValidPoint CaveMap {height = height, width = width} (i, j) =
@@ -38,8 +35,8 @@ isLowPoint :: CaveMap -> (Int, Int) -> Bool
 isLowPoint caveMap@CaveMap {height = height, width = width} index =
   all (> value) adjacentValues
   where
-    value = strictLookup caveMap index
-    adjacentValues = map (strictLookup caveMap) adjacentIndexes
+    value = caveMap ! index
+    adjacentValues = map (caveMap !) adjacentIndexes
     adjacentIndexes = filter (isValidPoint caveMap) $ getAdjacentPositions index
 
 getLowPoints :: CaveMap -> [(Int, Int)]
@@ -55,7 +52,7 @@ getBasinIncomplete caveMap explored new =
   where
     newExplored = explored ++ newPoints
     newPoints = pointsInBasin \\ explored
-    pointsInBasin = filter ((< 9) . strictLookup caveMap) possibleBasinPoints
+    pointsInBasin = filter ((< 9) . (caveMap !)) possibleBasinPoints
     possibleBasinPoints = filter (isValidPoint caveMap) $ getAdjacentPositions new
 
 getAdjacentPositions :: (Int, Int) -> [(Int, Int)]
@@ -68,7 +65,7 @@ indexesFromSize height width =
 firstProblem :: CaveMap -> Int
 firstProblem caveMap = sum $ map (+ 1) lowPointValues
   where
-    lowPointValues = map (strictLookup caveMap) $ getLowPoints caveMap
+    lowPointValues = map (caveMap !) $ getLowPoints caveMap
 
 secondProblem :: CaveMap -> Int
 secondProblem caveMap = product $ take 3 $ reverse $ sort basinSizes
