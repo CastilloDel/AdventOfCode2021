@@ -10,6 +10,8 @@ main = do
   input <- readInput "day11/input"
   print $ "Test input: " ++ show (firstProblem testInput) ++ " == 1656"
   print $ "Problem input: " ++ show (firstProblem input) ++ " == 1655"
+  print $ "Test input: " ++ show (secondProblem testInput) ++ " == 195"
+  print $ "Problem input: " ++ show (secondProblem input) ++ " == 337"
   where
     readInput file = fromLists . map (map digitToInt) . lines <$> readFile file
 
@@ -75,3 +77,13 @@ flashOctopuses = do
 
 firstProblem :: OctopusMap -> Int
 firstProblem = sum . evalState (replicateM 100 step)
+
+secondProblem :: OctopusMap -> Int
+secondProblem m = evalState (countStepsUntil (== nrows m * ncols m)) m
+
+countStepsUntil :: (Int -> Bool) -> State OctopusMap Int
+countStepsUntil p = try 1
+  where
+    try n = do
+      newFlashersNumber <- step
+      if p newFlashersNumber then return n else try (n + 1)
