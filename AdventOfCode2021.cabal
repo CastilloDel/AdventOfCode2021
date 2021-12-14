@@ -72,3 +72,9 @@ executable day11
     build-depends:    base ^>=4.14.3.0, matrix, mtl
     hs-source-dirs:   day11/src
     default-language: Haskell2010
+
+executable day12
+    main-is:          Main.hs
+    build-depends:    base ^>=4.14.3.0, containers, split
+    hs-source-dirs:   day12/src
+    default-language: Haskell2010
