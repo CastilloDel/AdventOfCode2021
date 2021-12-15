@@ -1,14 +1,19 @@
-import Control.Arrow (Arrow (first))
 import Data.List.Split (splitOn)
-import Data.Set (Set)
-import qualified Data.Set as Set (fromList, map, size)
+import Data.Matrix (Matrix, prettyMatrix)
+import qualified Data.Matrix as Matrix (fromList, setElem)
+import Data.Set (Set, empty)
+import qualified Data.Set as Set (fromList, map, size, toList)
 
 main :: IO ()
 main = do
   (testPoints, testInstructions) <- readInput "day13/test_input"
   (points, instructions) <- readInput "day13/input"
   print $ "Test input: " ++ show (firstProblem testPoints testInstructions) ++ " == 17"
-  print $ "Problem input: " ++ show (firstProblem points instructions) ++ " == *"
+  print $ "Problem input: " ++ show (firstProblem points instructions) ++ " == 701"
+  print "Test input:"
+  print $ secondProblem testPoints testInstructions
+  print "Problem input:"
+  print $ secondProblem points instructions
   where
     readInput file = parseInput . splitOn [""] . lines <$> readFile file
     parseInput (points : instructions : _) =
@@ -48,3 +53,17 @@ firstProblem points instructions =
   Set.size $ Set.map (`applyInstruction` instruction) points
   where
     instruction = head instructions
+
+secondProblem :: Points -> [Instruction] -> Matrix Char
+secondProblem points = matrixFromPoints . foldl mapInstruction points
+  where
+    mapInstruction set instruction = Set.map (`applyInstruction` instruction) set
+
+matrixFromPoints :: Points -> Matrix Char
+matrixFromPoints points = foldl foldMatrix emptyMatrix points
+  where
+    emptyMatrix = Matrix.fromList rows cols $ replicate (rows * cols) ' '
+    rows = maximum $ map ((+ 1) . y) $ Set.toList points
+    cols = maximum $ map ((+ 1) . x) $ Set.toList points
+    -- Matrix indexes start at 1
+    foldMatrix m (Point j i) = Matrix.setElem 'x' (i + 1, j + 1) m
