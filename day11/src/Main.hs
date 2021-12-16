@@ -48,8 +48,8 @@ updateOctopuses f list m = foldl folder m list
 
 type Position = (Int, Int)
 
-getNeightbours :: Position -> [Position]
-getNeightbours (i, j) =
+getNeighbours :: Position -> [Position]
+getNeighbours (i, j) =
   map (Data.Bifunctor.bimap (i +) (j +)) $ range ((-1, -1), (1, 1))
 
 isValidPos :: Matrix a -> Position -> Bool
@@ -69,7 +69,7 @@ flashOctopuses = do
     then return 0
     else do
       modify $ updateOctopuses flash flashers
-      let possibleFlashed = concatMap getNeightbours flashers
+      let possibleFlashed = concatMap getNeighbours flashers
       flashed <- gets (\m -> filter (isValidPos m) possibleFlashed)
       modify $ updateOctopuses applyFlash flashed
       newFlashersNumber <- flashOctopuses
