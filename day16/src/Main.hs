@@ -1,6 +1,5 @@
 import qualified Data.Bifunctor as Bifunctor
 import Data.Char (digitToInt)
-import Debug.Trace
 
 main :: IO ()
 main = do
@@ -8,14 +7,24 @@ main = do
   (packet, _) <- readInput "day16/input"
   print $ "Test input: " ++ show (firstProblem testPacket) ++ " == 16"
   print $ "Problem input: " ++ show (firstProblem packet) ++ " == 989"
+  print $ "Test input: " ++ show (secondProblem testPacket) ++ " == 16"
+  print $ "Problem input: " ++ show (secondProblem packet) ++ " == 989"
   where
     readInput file = parseHexPacket <$> readFile file
 
 data Packet = Packet {version :: Int, content :: PacketContent}
 
+type PacketPair = (Packet, Packet)
+
 data PacketContent
-  = Value Int
-  | SubPackets {typeID :: Int, packets :: [Packet]}
+  = Sum [Packet]
+  | Product [Packet]
+  | Minimum [Packet]
+  | Maximum [Packet]
+  | Value Int
+  | GreaterThan PacketPair
+  | LessThan PacketPair
+  | EqualTo PacketPair
 
 parseHexPacket :: String -> (Packet, Int)
 parseHexPacket = parsePacket . hexToBinary
@@ -29,40 +38,47 @@ parsePacket binary = (packet, bitLength)
     (content, contentBitLength) = parsePacketContent $ drop 3 binary
 
 parsePacketContent :: String -> (PacketContent, Int)
-parsePacketContent binary =
-  Bifunctor.second (+ 3) $
-    if typeID == 4
-      then parseValue rest
-      else parseSubPackets typeID rest
+parsePacketContent binary = Bifunctor.second (+ 3) packetContent
   where
+    packetContent = parser rest
+    parser =
+      case typeID of
+        1 -> Bifunctor.first Product . parsePacketList
+        2 -> Bifunctor.first Minimum . parsePacketList
+        3 -> Bifunctor.first Maximum . parsePacketList
+        4 -> Bifunctor.first Value . parseValue
+        5 -> Bifunctor.first GreaterThan . parsePacketPair
+        6 -> Bifunctor.first LessThan . parsePacketPair
+        7 -> Bifunctor.first EqualTo . parsePacketPair
+        _ -> Bifunctor.first Sum . parsePacketList
     typeID = binaryToInt $ take 3 binary
     rest = drop 3 binary
 
-parseValue :: String -> (PacketContent, Int)
-parseValue = Bifunctor.first Value . parseValue'
+parsePacketPair :: String -> (PacketPair, Int)
+parsePacketPair s = case parsePacketList s of
+  ([p1, p2], i) -> ((p1, p2), i)
+  _ -> error $ "Invalid Pair: " ++ s
+
+parsePacketList :: String -> ([Packet], Int)
+parsePacketList binary = Bifunctor.second (+ 1) packetContent
   where
-    parseValue' (x : s) =
-      if x == '0'
-        then (val, 5)
-        else
-          let (nextVal, nextLength) = parseValue' $ drop 4 s
-           in (val * 16 + nextVal, 5 + nextLength)
-      where
-        val = binaryToInt $ take 4 s
-    parseValue' _ = error "Error while parsing"
+    packetContent =
+      if head binary == '0'
+        then parsePacketListLength $ tail binary
+        else parsePacketListNumber $ tail binary
 
-parseSubPackets :: Int -> String -> (PacketContent, Int)
-parseSubPackets typeID binary =
-  Bifunctor.second
-    (+ 1)
-    ( if head binary == '0'
-        then parseSubPacketsLength typeID $ tail binary
-        else parseSubPacketsNumber typeID $ tail binary
-    )
+parseValue :: String -> (Int, Int)
+parseValue ('0' : s) = (binaryToInt $ take 4 s, 5)
+parseValue (x : s) = (actualValue * magnitude + nextVal, 5 + nextLength)
+  where
+    -- Multiplying by the magnitude gives each block its correct value
+    magnitude = 16 ^ (nextLength `div` 5)
+    actualValue = binaryToInt $ take 4 s
+    (nextVal, nextLength) = parseValue $ drop 4 s
+parseValue _ = error "Error while parsing"
 
-parseSubPacketsLength :: Int -> String -> (PacketContent, Int)
-parseSubPacketsLength typeID binary =
-  (SubPackets {typeID = typeID, packets = packets}, len + 15)
+parsePacketListLength :: String -> ([Packet], Int)
+parsePacketListLength binary = (packets, len + 15)
   where
     len = binaryToInt $ take 15 binary
     packetsBinary = drop 15 binary
@@ -72,9 +88,8 @@ parseSubPacketsLength typeID binary =
       let (packet, len) = parsePacket binary
        in parsePackets (packet : packets) (remaining - len) $ drop len binary
 
-parseSubPacketsNumber :: Int -> String -> (PacketContent, Int)
-parseSubPacketsNumber typeID binary =
-  (SubPackets {typeID = typeID, packets = packets}, len + 11)
+parsePacketListNumber :: String -> ([Packet], Int)
+parsePacketListNumber binary = (packets, len + 11)
   where
     number = binaryToInt $ take 11 binary
     packetsBinary = drop 11 binary
@@ -114,6 +129,32 @@ binaryToInt :: String -> Int
 binaryToInt = foldl (\acc digit -> acc * 2 + digitToInt digit) 0
 
 firstProblem :: Packet -> Int
-firstProblem Packet {version = v, content = SubPackets {packets = ps}} =
-  v + sum (map firstProblem ps)
-firstProblem Packet {version = v} = v
+firstProblem (Packet version content) =
+  version + sum (map firstProblem $ getSubPackets content)
+
+getSubPackets :: PacketContent -> [Packet]
+getSubPackets (Sum a) = a
+getSubPackets (Product a) = a
+getSubPackets (Minimum a) = a
+getSubPackets (Maximum a) = a
+getSubPackets (Value a) = []
+getSubPackets (GreaterThan (a, b)) = [a, b]
+getSubPackets (LessThan (a, b)) = [a, b]
+getSubPackets (EqualTo (a, b)) = [a, b]
+
+secondProblem :: Packet -> Int
+secondProblem (Packet _ (Sum packets)) = sum $ map secondProblem packets
+secondProblem (Packet _ (Product packets)) = product $ map secondProblem packets
+secondProblem (Packet _ (Minimum packets)) = minimum $ map secondProblem packets
+secondProblem (Packet _ (Maximum packets)) = maximum $ map secondProblem packets
+secondProblem (Packet _ (Value val)) = val
+secondProblem (Packet _ (GreaterThan (p1, p2))) =
+  boolToInt $ secondProblem p1 > secondProblem p2
+secondProblem (Packet _ (LessThan (p1, p2))) =
+  boolToInt $ secondProblem p1 < secondProblem p2
+secondProblem (Packet _ (EqualTo (p1, p2))) =
+  boolToInt $ secondProblem p1 == secondProblem p2
+
+boolToInt :: Bool -> Int
+boolToInt True = 1
+boolToInt False = 0
