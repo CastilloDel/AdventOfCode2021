@@ -8,11 +8,13 @@ main = do
   snailNums <- readInput "day18/input"
   print $ "Test input: " ++ show (firstProblem testSnailNums) ++ " == 4140"
   print $ "Problem input: " ++ show (firstProblem snailNums) ++ " == *"
+  print $ "Test input: " ++ show (secondProblem testSnailNums) ++ " == 3393"
+  print $ "Problem input: " ++ show (secondProblem snailNums) ++ " == 4701"
   where
     readInput file =
       map (fst . head . readP_to_S parseSnailNumber) . lines <$> readFile file
 
-data SnailNumber = Num Int | Pair SnailNumber SnailNumber deriving (Show)
+data SnailNumber = Num Int | Pair SnailNumber SnailNumber deriving (Show, Eq)
 
 type FlattenedSnailNumber = [(Depth, Int)]
 
@@ -95,3 +97,9 @@ getMagnitude (Pair snail1 snail2) =
 
 firstProblem :: [SnailNumber] -> Int
 firstProblem = getMagnitude . foldl1 addSnailNumbers
+
+secondProblem :: [SnailNumber] -> Int
+secondProblem snailNumbers = maximum $ map getMagnitude possibleResults
+  where
+    possibleResults =
+      concatMap (\a -> map (addSnailNumbers a) snailNumbers) snailNumbers
