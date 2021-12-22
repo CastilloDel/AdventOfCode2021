@@ -123,6 +123,12 @@ executable day19
 
 executable day20
     main-is:          Main.hs
-    build-depends:    base ^>=4.14.3.0, array, matrix, mtl
+    build-depends:    base ^>=4.14.3.0, array, matrix
     hs-source-dirs:   day20/src
+    default-language: Haskell2010
+
+executable day21
+    main-is:          Main.hs
+    build-depends:    base ^>=4.14.3.0
+    hs-source-dirs:   day21/src
     default-language: Haskell2010
