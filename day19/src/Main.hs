@@ -11,6 +11,8 @@ main = do
   beacons <- readInput "day19/input"
   print $ "Test input: " ++ show (firstProblem testBeacons) ++ " == 79"
   print $ "Problem input: " ++ show (firstProblem beacons) ++ " == 459"
+  print $ "Test input: " ++ show (firstProblem testBeacons) ++ " == 3621"
+  print $ "Problem input: " ++ show (secondProblem beacons) ++ " == 19130"
   where
     readInput file =
       toCoordinates . splitOn [""] . filterTitles . lines <$> readFile file
@@ -47,27 +49,31 @@ subtractCoordinates (Point x1 y1 z1) (Point x2 y2 z2) =
   Point (x1 - x2) (y1 - y2) (z1 - z2)
 
 firstProblem :: [Beacons] -> Int
-firstProblem (origin : rest) = Set.size $ discoverBeacons origin rest
+firstProblem (origin : rest) = Set.size $ fst $ discoverBeacons origin [] rest
 firstProblem _ = error "Invalid input"
 
-discoverBeacons :: Beacons -> [Beacons] -> Beacons
-discoverBeacons known unknown = maybe known keepDiscovering identification
+discoverBeacons :: Beacons -> [Point] -> [Beacons] -> (Beacons, [Point])
+discoverBeacons known scanners unknown =
+  maybe (known, scanners) keepDiscovering identification
   where
-    keepDiscovering (new, old) =
-      discoverBeacons (Set.union new known) (filter (/= old) unknown)
+    keepDiscovering (new, old, newScanner) =
+      discoverBeacons
+        (Set.union new known)
+        (newScanner : scanners)
+        (filter (/= old) unknown)
     identification = foldMaybes $ map (identifyBeacons known) unknown
 
-identifyBeacons :: Beacons -> Beacons -> Maybe (Beacons, Beacons)
+identifyBeacons :: Beacons -> Beacons -> Maybe (Beacons, Beacons, Point)
 identifyBeacons origin other =
   foldMaybes $ map checkIntersection orientations
   where
-    checkIntersection orientation =
+    checkIntersection (orientation, shift) =
       if Set.size (Set.intersection origin orientation) >= 12
-        then Just (orientation, other)
+        then Just (orientation, other, shift)
         else Nothing
     orientations = concatMap applyShifts $ getAllOrientations other
     applyShifts other =
-      [Set.map (addCoordinates shift) other | shift <- getShifts other]
+      [(Set.map (addCoordinates shift) other, shift) | shift <- getShifts other]
     getShifts other =
       [ a `subtractCoordinates` b
         | a <- Set.toList origin,
@@ -94,3 +100,14 @@ getAllOrientations beacons =
     s231 (Point a b c) = Point b c a
     s312 (Point a b c) = Point c a b
     s321 (Point a b c) = Point c b a
+
+secondProblem :: [Beacons] -> Int
+secondProblem (origin : rest) = maximum scannerDistances
+  where
+    scannerDistances = [a `getManhattanDistance` b | a <- scanners, b <- scanners]
+    scanners = snd $ discoverBeacons origin [] rest
+secondProblem _ = error "Invalid input"
+
+getManhattanDistance :: Point -> Point -> Int
+getManhattanDistance (Point x1 y1 z1) (Point x2 y2 z2) =
+  abs (x1 - x2) + abs (y1 - y2) + abs (z1 - z2)
