@@ -7,7 +7,7 @@ main = do
   testSnailNums <- readInput "day18/test_input"
   snailNums <- readInput "day18/input"
   print $ "Test input: " ++ show (firstProblem testSnailNums) ++ " == 4140"
-  print $ "Problem input: " ++ show (firstProblem snailNums) ++ " == *"
+  print $ "Problem input: " ++ show (firstProblem snailNums) ++ " == 4243"
   print $ "Test input: " ++ show (secondProblem testSnailNums) ++ " == 3393"
   print $ "Problem input: " ++ show (secondProblem snailNums) ++ " == 4701"
   where
