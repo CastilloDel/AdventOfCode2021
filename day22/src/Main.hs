@@ -1,49 +1,53 @@
 {-# LANGUAGE TupleSections #-}
 
 import Data.Char (isDigit)
-import Data.Set (Set)
-import qualified Data.Set as Set (difference, empty, filter, fromList, size, union)
+import Data.Maybe (fromJust, isJust)
+import Data.MultiSet (MultiSet)
+import qualified Data.MultiSet as Set (difference, empty, filter, fromList, insert, map, size, union)
 import Text.ParserCombinators.ReadP (ReadP, char, many1, readP_to_S, satisfy, string, (+++))
 
 main :: IO ()
 main = do
-  testRules <- readInput "day22/test_input"
-  rules <- readInput "day22/input"
-  print $ "Test input: " ++ show (firstProblem testRules) ++ " == 39"
-  print $ "Problem input: " ++ show (firstProblem rules) ++ " == 644257"
+  testSteps <- readInput "day22/test_input"
+  steps <- readInput "day22/input"
+  print $ "Test input: " ++ show (firstProblem testSteps) ++ " == 474140"
+  print $ "Problem input: " ++ show (firstProblem steps) ++ " == 644257"
+  print $ "Test input: " ++ show (secondProblem testSteps) ++ " == 2758514936282235"
+  print $ "Problem input: " ++ show (secondProblem steps) ++ " == 1235484513229032"
   where
     readInput file = map parseInput . lines <$> readFile file
-    parseInput = fst . last . readP_to_S parseRule
+    parseInput = fst . last . readP_to_S parseStep
 
-data Rule = On Area | Off Area deriving (Show)
+data Step = Step StepType Cuboid deriving (Show, Eq)
 
-data Area = Area {x :: Limits, y :: Limits, z :: Limits} deriving (Show)
+data StepType = On | Off deriving (Show, Eq)
+
+data Cuboid = Cuboid {x :: Limits, y :: Limits, z :: Limits}
+  deriving (Show, Eq, Ord)
 
 -- Must be (lowerLimit, upperLimit)
 type Limits = (Int, Int)
 
-type Point = (Int, Int, Int)
+parseStep :: ReadP Step
+parseStep = parseOnStep +++ parseOffStep
 
-parseRule :: ReadP Rule
-parseRule = parseOnRule +++ parseOffRule
-
-parseOnRule :: ReadP Rule
-parseOnRule = do
+parseOnStep :: ReadP Step
+parseOnStep = do
   string "on "
-  On <$> parseArea
+  Step On <$> parseCuboid
 
-parseOffRule :: ReadP Rule
-parseOffRule = do
+parseOffStep :: ReadP Step
+parseOffStep = do
   string "off "
-  Off <$> parseArea
+  Step Off <$> parseCuboid
 
-parseArea :: ReadP Area
-parseArea = do
+parseCuboid :: ReadP Cuboid
+parseCuboid = do
   l1 <- parseLimits
   char ','
   l2 <- parseLimits
   char ','
-  Area l1 l2 <$> parseLimits
+  Cuboid l1 l2 <$> parseLimits
 
 parseLimits :: ReadP Limits
 parseLimits = do
@@ -58,17 +62,58 @@ parseNumber = do
   number <- many1 $ satisfy (\a -> isDigit a || a == '-')
   return $ read number
 
-firstProblem :: [Rule] -> Int
-firstProblem = Set.size . foldl foldIntoSet Set.empty
+firstProblem :: [Step] -> Int
+firstProblem = reboot . filterInitialization
   where
-    foldIntoSet set (On area) = Set.union set $ setFromArea area
-    foldIntoSet set (Off area) = Set.difference set $ setFromArea area
-
-setFromArea :: Area -> Set Point
-setFromArea (Area (x1, x2) (y1, y2) (z1, z2))
-  | isInsideInitializationArea =
-    Set.fromList [(x, y, z) | x <- [x1 .. x2], y <- [y1 .. y2], z <- [z1 .. z2]]
-  | otherwise = Set.empty
-  where
-    isInsideInitializationArea =
+    filterInitialization = filter (isInside 50 50 . getCuboidFromStep)
+    isInside min max (Cuboid (x1, x2) (y1, y2) (z1, z2)) =
       x1 >= -50 && x2 <= 50 && y1 >= -50 && y2 <= 50 && z1 >= -50 && z2 <= 50
+
+secondProblem :: [Step] -> Int
+secondProblem = reboot
+
+reboot :: [Step] -> Int
+reboot = count . foldl applyStep (Set.empty, Set.empty)
+  where
+    count (add, sub) = getCardinalitySum add - getCardinalitySum sub
+    getCardinalitySum set = sum (Set.map getCardinality set)
+
+type State = (MultiSet Cuboid, MultiSet Cuboid)
+
+applyStep :: State -> Step -> State
+applyStep (add, sub) (Step t cuboid)
+  | t == On =
+    ( Set.insert cuboid $ Set.union subIntersections add,
+      Set.union addIntersections sub
+    )
+  | otherwise =
+    ( Set.union subIntersections add,
+      Set.union addIntersections sub
+    )
+  where
+    addIntersections = filterNothing $ Set.map (getIntersection cuboid) add
+    subIntersections = filterNothing $ Set.map (getIntersection cuboid) sub
+    filterNothing = Set.map fromJust . Set.filter isJust
+
+getCuboidFromStep :: Step -> Cuboid
+getCuboidFromStep (Step _ area) = area
+
+getCardinality :: Cuboid -> Int
+getCardinality (Cuboid (x1, x2) (y1, y2) (z1, z2)) =
+  getDist x1 x2 * getDist y2 y1 * getDist z2 z1
+  where
+    getDist a b = abs (a - b) + 1
+
+getIntersection :: Cuboid -> Cuboid -> Maybe Cuboid
+getIntersection (Cuboid x1 y1 z1) (Cuboid x2 y2 z2) = do
+  x <- getIntersection1D x1 x2
+  y <- getIntersection1D y1 y2
+  Cuboid x y <$> getIntersection1D z1 z2
+
+getIntersection1D :: Limits -> Limits -> Maybe Limits
+getIntersection1D (l1, u1) (l2, u2)
+  | lower <= upper = Just (lower, upper)
+  | otherwise = Nothing
+  where
+    lower = max l1 l2
+    upper = min u1 u2
