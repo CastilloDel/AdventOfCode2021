@@ -12,6 +12,8 @@ main = do
   rooms <- readInput "day23/input"
   print $ "Test input: " ++ show (firstProblem testRooms) ++ " == 12521"
   print $ "Problem input: " ++ show (firstProblem rooms) ++ " == 15109"
+  print $ "Test input: " ++ show (secondProblem testRooms) ++ " == 44169"
+  print $ "Problem input: " ++ show (secondProblem rooms) ++ " == 53751"
   where
     readInput file = parseInput . take 2 . drop 2 . lines <$> readFile file
     parseInput = transpose . map (map (,False) . mapMaybe parseAmphipod)
@@ -58,6 +60,13 @@ firstProblem rooms =
   where
     hallway = replicate hallwaySize Nothing
     roomSize = length $ head rooms
+
+secondProblem :: [Room] -> Maybe Int
+secondProblem rooms = firstProblem newRooms
+  where
+    newRooms = zipWith addInSecond rooms amphipodsToAdd
+    amphipodsToAdd = map (map (,False)) [[D, D], [C, B], [B, A], [A, C]]
+    addInSecond list1 list2 = (head list1 : list2) ++ tail list1
 
 exploreSolutions :: Mem -> Int -> State -> (Maybe Int, Mem)
 exploreSolutions mem size state =
@@ -163,7 +172,7 @@ getDistance size room roomIndex pos = hallwayDistance + roomDistance
   where
     -- Adjust to account for the fact we don't store the room entries
     hallwayDistance = 2 * hallwayDistance' + (if isLimit then 0 else 1)
-    isLimit = pos == 0 || pos == hallwaySize
+    isLimit = pos == 0 || pos == hallwaySize - 1
     hallwayDistance' = min (abs $ roomIndex + 1 - pos) (abs $ roomIndex + 2 - pos)
     roomDistance = size - length room
 
