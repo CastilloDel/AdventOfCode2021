@@ -1,13 +1,16 @@
+import Data.Maybe (mapMaybe)
+
 main :: IO ()
 main = do
-  instructions <- readInstructions <$> readFile "day2/input"
-  print $ fmap (problem applyInstruction1) instructions
-  print $ fmap (problem applyInstruction2) instructions
-
-readInstructions :: String -> Maybe [Instruction]
-readInstructions = collectMaybes . map parseInstruction . lines
+  testInstructions <- mapMaybe parseInstruction . lines <$> readFile "day2/test_input"
+  instructions <- mapMaybe parseInstruction . lines <$> readFile "day2/input"
+  print $ "Test input: " ++ show (firstProblem testInstructions) ++ " == 150"
+  print $ "Problem input: " ++ show (firstProblem instructions) ++ " == 1383564"
+  print $ "Test input: " ++ show (secondProblem testInstructions) ++ " == 900"
+  print $ "Problem input: " ++ show (secondProblem instructions) ++ " == 1488311643"
   where
-    collectMaybes = foldr (\b acc -> (:) <$> b <*> acc) (Just [])
+    firstProblem = problem applyInstruction1
+    secondProblem = problem applyInstruction2
 
 data Instruction = Forward Int | Down Int | Up Int
 
@@ -18,10 +21,10 @@ parseInstruction input
   | word == "up" = createInstruction Up
   | otherwise = Nothing
   where
-    contents = words input
-    word = head contents
-    number = read (last contents) :: Int
     createInstruction instructionType = Just $ instructionType number
+    word = head contents
+    number = read $ last contents
+    contents = words input
 
 data Submarine = Submarine {position :: Int, depth :: Int, aim :: Int}
 
