@@ -1,5 +1,6 @@
 import qualified Data.Bifunctor as Bifunctor
 import Data.List (findIndex, (\\))
+import Data.Maybe (catMaybes)
 
 main :: IO ()
 main = do
@@ -29,15 +30,12 @@ secondProblem = sum . map decodeSegments
 
 decodeSegments :: ([String], [String]) -> Int
 decodeSegments =
-  toInt . map throwMaybes . decodeOutput . Bifunctor.first identifyNumbers
+  toInt . catMaybes . decodeOutput . Bifunctor.first identifyNumbers
   where
-    toInt it = read (foldl1 (++) $ map show it) :: Int
+    toInt it = read (foldl1 (++) $ map show it)
     decodeOutput (numbers, output) =
-      map (\a -> findIndex (isSetEqual a) numbers) output
+      map ((`findIndex` numbers) . isSetEqual) output
     isSetEqual a b = b \\ a == "" && a \\ b == ""
-    -- We can get rid of the maybes because we know the numbers in the output
-    -- are in the first part. It is part of the problem
-    throwMaybes = \(Just a) -> a
 
 identifyNumbers :: [String] -> [String]
 identifyNumbers numbers = [zero, one, two, three, four, five, six, seven, eight, nine]

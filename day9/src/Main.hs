@@ -1,7 +1,10 @@
+{-# LANGUAGE NamedFieldPuns #-}
+
 import Data.Char (digitToInt)
 import Data.Ix (range)
 import Data.List (sort, (\\))
-import qualified Data.Map as Map
+import Data.Map (Map)
+import qualified Data.Map as Map (fromList, (!))
 
 main :: IO ()
 main = do
@@ -12,12 +15,12 @@ main = do
   print $ "Test input: " ++ show (secondProblem testInput) ++ " == 1134"
   print $ "Problem input: " ++ show (secondProblem input) ++ " == 902880"
   where
-    readInput file = caveMapFromMatrix . map (map digitToInt) . lines <$> readFile file
+    readInput = fmap (caveMapFromMatrix . map (map digitToInt) . lines) . readFile
 
-data CaveMap = CaveMap {height :: Int, width :: Int, contents :: Map.Map (Int, Int) Int}
+data CaveMap = CaveMap {height :: Int, width :: Int, contents :: Map (Int, Int) Int}
 
 caveMapFromMatrix :: [[Int]] -> CaveMap
-caveMapFromMatrix matrix = CaveMap {height = height, width = width, contents = contents}
+caveMapFromMatrix matrix = CaveMap {height, width, contents}
   where
     height = length matrix
     width = length $ head matrix
@@ -28,19 +31,18 @@ caveMapFromMatrix matrix = CaveMap {height = height, width = width, contents = c
 (!) CaveMap {contents = contents} key = contents Map.! key
 
 isValidPoint :: CaveMap -> (Int, Int) -> Bool
-isValidPoint CaveMap {height = height, width = width} (i, j) =
+isValidPoint CaveMap {height, width} (i, j) =
   not $ i < 0 || j < 0 || i >= height || j >= width
 
 isLowPoint :: CaveMap -> (Int, Int) -> Bool
-isLowPoint caveMap@CaveMap {height = height, width = width} index =
-  all (> value) adjacentValues
+isLowPoint caveMap@CaveMap {height, width} index = all (> value) adjacentValues
   where
     value = caveMap ! index
     adjacentValues = map (caveMap !) adjacentIndexes
     adjacentIndexes = filter (isValidPoint caveMap) $ getAdjacentPositions index
 
 getLowPoints :: CaveMap -> [(Int, Int)]
-getLowPoints caveMap@CaveMap {height = height, width = width} =
+getLowPoints caveMap@CaveMap {height, width} =
   filter (isLowPoint caveMap) $ indexesFromSize height width
 
 getBasin :: CaveMap -> (Int, Int) -> [(Int, Int)]
@@ -59,8 +61,7 @@ getAdjacentPositions :: (Int, Int) -> [(Int, Int)]
 getAdjacentPositions (i, j) = [(i + 1, j), (i, j + 1), (i - 1, j), (i, j - 1)]
 
 indexesFromSize :: Int -> Int -> [(Int, Int)]
-indexesFromSize height width =
-  range ((0, 0), (height - 1, width - 1))
+indexesFromSize height width = range ((0, 0), (height - 1, width - 1))
 
 firstProblem :: CaveMap -> Int
 firstProblem caveMap = sum $ map (+ 1) lowPointValues

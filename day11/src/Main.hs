@@ -42,25 +42,23 @@ findFlashers matrix = foldl foldIfFlasher [] indexes
     indexes = range ((1, 1), (nrows matrix, ncols matrix))
 
 updateOctopuses :: (Octopus -> Octopus) -> [Position] -> OctopusMap -> OctopusMap
-updateOctopuses f list m = foldl folder m list
+updateOctopuses updater positions m = foldl foldIntoNewMap m positions
   where
-    folder matrix pos = setElem (f $ matrix ! pos) pos matrix
+    foldIntoNewMap matrix pos = setElem (updater $ matrix ! pos) pos matrix
 
 type Position = (Int, Int)
 
 getNeighbours :: Position -> [Position]
-getNeighbours (i, j) =
-  map (Data.Bifunctor.bimap (i +) (j +)) $ range ((-1, -1), (1, 1))
+getNeighbours (i, j) = map (bimap (i +) (j +)) $ range ((-1, -1), (1, 1))
 
 isValidPos :: Matrix a -> Position -> Bool
 -- Matrix indexes start at 1
 isValidPos m (i, j) = i > 0 && j > 0 && i <= nrows m && j <= ncols m
 
 step :: State OctopusMap Int
-step =
-  do
-    modify $ fmap (+ 1)
-    flashOctopuses
+step = do
+  modify $ fmap (+ 1)
+  flashOctopuses
 
 flashOctopuses :: State OctopusMap Int
 flashOctopuses = do

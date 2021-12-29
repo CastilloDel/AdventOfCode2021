@@ -6,9 +6,14 @@ firstTimeToReproduce = 2 + timeToReproduce
 
 main :: IO ()
 main = do
+  testNumbers <- map read . splitByCommas . head . lines <$> readFile "day6/test_input"
   numbers <- map read . splitByCommas . head . lines <$> readFile "day6/input"
-  print $ problem 80 numbers -- First problem -> 80 days
-  print $ problem 256 numbers -- Second problem -> 256 days
+  -- First problem -> 80 days
+  print $ "Test input: " ++ show (problem 80 testNumbers) ++ " == 5934"
+  print $ "Problem input: " ++ show (problem 80 numbers) ++ " == 362666"
+  -- Second problem -> 256 days
+  print $ "Test input: " ++ show (problem 256 testNumbers) ++ " == 26984457539"
+  print $ "Problem input: " ++ show (problem 256 numbers) ++ " == 1640526601595"
   where
     splitByCommas = words . map (\a -> if a == ',' then ' ' else a)
 
@@ -24,7 +29,7 @@ problem days = sum . advanceNDays days . countOcurrences
 countOcurrences :: [Int] -> [Int]
 countOcurrences =
   -- We add one of each type of fish to ensure the list gets properly initialized
-  map ((\a -> a - 1) . length) . group . sort . (++ [0 .. firstTimeToReproduce])
+  map ((+ (- 1)) . length) . group . sort . (++ [0 .. firstTimeToReproduce])
 
 advanceDay :: [Int] -> [Int]
 advanceDay lanternfishes =

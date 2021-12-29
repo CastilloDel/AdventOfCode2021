@@ -1,11 +1,14 @@
 import Data.List (transpose)
-import Data.Maybe (isJust, isNothing)
+import Data.Maybe (isNothing, mapMaybe)
 
 main :: IO ()
 main = do
+  (testNumbers, testTables) <- parseInput . lines <$> readFile "day4/test_input"
   (numbers, tables) <- parseInput . lines <$> readFile "day4/input"
-  print $ firstProblem numbers tables
-  print $ secondProblem numbers tables
+  print $ "Test input: " ++ show (firstProblem testNumbers testTables) ++ " == 4512"
+  print $ "Problem input: " ++ show (firstProblem numbers tables) ++ " == 38594"
+  print $ "Test input: " ++ show (secondProblem testNumbers testTables) ++ " == 1924"
+  print $ "Problem input: " ++ show (secondProblem numbers tables) ++ " == 21184"
 
 newtype BingoTable = BingoTable [[Maybe Int]] deriving (Show)
 
@@ -37,8 +40,7 @@ firstProblem (first : rest) tables =
     else Just $ head possibleBingos * first
   where
     newTables = map (newNumber first) tables
-    possibleBingos = removeNothings $ map calculateBingo newTables
-    removeNothings = map (\(Just a) -> a) . filter isJust
+    possibleBingos = mapMaybe calculateBingo newTables
 
 newNumber :: Int -> BingoTable -> BingoTable
 newNumber number (BingoTable table) = BingoTable $ map (map filterToNothing) table

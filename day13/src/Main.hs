@@ -22,12 +22,12 @@ main = do
       )
     parseInput _ = error "Invalid input"
 
-data Point = Point {x :: Int, y :: Int} deriving (Show, Eq, Ord)
+type Point = (Int, Int)
 
 pointFromString :: String -> Point
 pointFromString s = fromParts $ splitOn "," s
   where
-    fromParts (x : y : _) = Point (read x) (read y)
+    fromParts (x : y : _) = (read x, read y)
     fromParts _ = error $ "Invalid point: " ++ s
 
 type Points = Set Point
@@ -42,8 +42,8 @@ instructionFromString s = fromParts $ splitOn "=" $ words s !! 2
     fromParts _ = error $ "Invalid instruction: " ++ s
 
 applyInstruction :: Point -> Instruction -> Point
-applyInstruction (Point x y) (X val) = Point (foldAround val x) y
-applyInstruction (Point x y) (Y val) = Point x (foldAround val y)
+applyInstruction (x, y) (X val) = (foldAround val x, y)
+applyInstruction (x, y) (Y val) = (x, foldAround val y)
 
 foldAround :: Int -> Int -> Int
 foldAround center val = if val < center then val else center * 2 - val
@@ -63,7 +63,7 @@ matrixFromPoints :: Points -> Matrix Char
 matrixFromPoints points = foldl foldMatrix emptyMatrix points
   where
     emptyMatrix = Matrix.fromList rows cols $ replicate (rows * cols) ' '
-    rows = maximum $ map ((+ 1) . y) $ Set.toList points
-    cols = maximum $ map ((+ 1) . x) $ Set.toList points
+    rows = maximum $ map ((+ 1) . snd) $ Set.toList points
+    cols = maximum $ map ((+ 1) . fst) $ Set.toList points
     -- Matrix indexes start at 1
-    foldMatrix m (Point j i) = Matrix.setElem 'x' (i + 1, j + 1) m
+    foldMatrix m (j, i) = Matrix.setElem 'x' (i + 1, j + 1) m

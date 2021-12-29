@@ -1,6 +1,6 @@
 import Data.Either (lefts, rights)
 import Data.List (sort)
-import qualified Data.Map as Map
+import qualified Data.Map as Map (fromList, lookup, (!))
 
 pointsForIllegalChar = Map.fromList [(')', 3), (']', 57), ('}', 1197), ('>', 25137)]
 

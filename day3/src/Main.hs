@@ -3,9 +3,12 @@ import Data.List (group, maximumBy, sort, transpose)
 
 main :: IO ()
 main = do
+  testLines <- lines <$> readFile "day3/test_input"
   lines <- lines <$> readFile "day3/input"
-  print $ firstProblem lines
-  print $ secondProblem lines
+  print $ "Test input: " ++ show (firstProblem testLines) ++ " == 198"
+  print $ "Problem input: " ++ show (firstProblem lines) ++ " == 4160394"
+  print $ "Test input: " ++ show (secondProblem testLines) ++ " == 230"
+  print $ "Problem input: " ++ show (secondProblem lines) ++ " == 4125600"
 
 firstProblem :: [String] -> Int
 firstProblem lines = binaryToDecimal gamma * binaryToDecimal epsilon
@@ -34,7 +37,7 @@ getOxygenRating = getRating mostFrequent
 getCO2Rating :: [String] -> String
 getCO2Rating = getRating leastFrequent
   where
-    leastFrequent = \val -> if mostFrequent val == '0' then '1' else '0'
+    leastFrequent val = if mostFrequent val == '0' then '1' else '0'
 
 getRating :: (String -> Char) -> [String] -> String
 getRating _ [x] = x

@@ -4,10 +4,10 @@ main :: IO ()
 main = do
   testNumbers <- map read . splitByCommas . head . lines <$> readFile "day7/test_input"
   numbers <- map read . splitByCommas . head . lines <$> readFile "day7/input"
-  print $ "Test input: " ++ show (firstProblem testNumbers == 37)
-  print $ firstProblem numbers
-  print $ "Test input: " ++ show (secondProblem testNumbers == 168)
-  print $ secondProblem numbers
+  print $ "Test input: " ++ show (firstProblem testNumbers) ++ " == 37"
+  print $ "Problem input: " ++ show (firstProblem numbers) ++ " == 336040"
+  print $ "Test input: " ++ show (secondProblem testNumbers) ++ " == 78"
+  print $ "Problem input: " ++ show (secondProblem numbers) ++ " == 94813675"
   where
     splitByCommas = words . map (\a -> if a == ',' then ' ' else a)
 
