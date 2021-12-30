@@ -21,7 +21,7 @@ main = do
   print $ "Test input: " ++ show (firstProblem testCavern) ++ " == 40"
   print $ "Problem input: " ++ show (firstProblem cavern) ++ " == 429"
   print $ "Test input: " ++ show (secondProblem testCavern) ++ " == 315"
-  print $ "Problem input: " ++ show (secondProblem cavern) ++ " == *"
+  print $ "Problem input: " ++ show (secondProblem cavern) ++ " == 2844"
   where
     readInput file = fmap digitToInt . Matrix.fromLists . lines <$> readFile file
 
@@ -83,16 +83,16 @@ getPathCost start end cavern = getPathCost' initialPaths Map.empty
   where
     initialPaths = Set.insert (newPath start 0 end) Set.empty
     getPathCost' paths visited =
-      let cheapestPath = head $ Set.toAscList paths
-          lastPoint = position cheapestPath
-          paths' = Set.delete cheapestPath paths
-          newPaths = getNewPaths cheapestPath end visited cavern
-          nextPaths = foldr Set.insert paths' newPaths
-          nextVisited = foldl foldPointsWithCost visited newPaths
-          foldPointsWithCost m path = Map.insert (position path) (cost path) m
-       in if lastPoint == end
-            then cost cheapestPath
-            else getPathCost' nextPaths nextVisited
+      if lastPoint == end
+        then cost cheapestPath
+        else getPathCost' nextPaths nextVisited
+      where
+        lastPoint = position cheapestPath
+        cheapestPath = head $ Set.toAscList paths
+        nextPaths = foldr Set.insert (Set.delete cheapestPath paths) newPaths
+        nextVisited = foldl foldPointsWithCost visited newPaths
+        newPaths = getNewPaths cheapestPath end visited cavern
+        foldPointsWithCost m path = Map.insert (position path) (cost path) m
 
 getNewPaths :: Path -> Point -> Map Point Int -> CavernMap -> [Path]
 getNewPaths actual end visited cavern =

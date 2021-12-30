@@ -42,8 +42,7 @@ flattenSnailNumber = flattenWithDepth 0
   where
     flattenWithDepth depth (Num num) = [(depth, num)]
     flattenWithDepth depth (Pair snail1 snail2) =
-      flattenWithDepth newDepth snail1
-        ++ flattenWithDepth newDepth snail2
+      flattenWithDepth newDepth snail1 ++ flattenWithDepth newDepth snail2
       where
         newDepth = depth + 1
 
@@ -101,5 +100,4 @@ firstProblem = getMagnitude . foldl1 addSnailNumbers
 secondProblem :: [SnailNumber] -> Int
 secondProblem snailNumbers = maximum $ map getMagnitude possibleResults
   where
-    possibleResults =
-      concatMap (\a -> map (addSnailNumbers a) snailNumbers) snailNumbers
+    possibleResults = [addSnailNumbers a b | a <- snailNumbers, b <- snailNumbers]

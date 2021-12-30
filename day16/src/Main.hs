@@ -1,14 +1,14 @@
-import qualified Data.Bifunctor as Bifunctor
+import Data.Bifunctor (first, second)
 import Data.Char (digitToInt)
 
 main :: IO ()
 main = do
   (testPacket, _) <- readInput "day16/test_input"
   (packet, _) <- readInput "day16/input"
-  print $ "Test input: " ++ show (firstProblem testPacket) ++ " == 16"
+  print $ "Test input: " ++ show (firstProblem testPacket) ++ " == 20"
   print $ "Problem input: " ++ show (firstProblem packet) ++ " == 989"
-  print $ "Test input: " ++ show (secondProblem testPacket) ++ " == 16"
-  print $ "Problem input: " ++ show (secondProblem packet) ++ " == 989"
+  print $ "Test input: " ++ show (secondProblem testPacket) ++ " == 1"
+  print $ "Problem input: " ++ show (secondProblem packet) ++ " == 7936430475134"
   where
     readInput file = parseHexPacket <$> readFile file
 
@@ -38,19 +38,19 @@ parsePacket binary = (packet, bitLength)
     (content, contentBitLength) = parsePacketContent $ drop 3 binary
 
 parsePacketContent :: String -> (PacketContent, Int)
-parsePacketContent binary = Bifunctor.second (+ 3) packetContent
+parsePacketContent binary = second (+ 3) packetContent
   where
     packetContent = parser rest
     parser =
       case typeID of
-        1 -> Bifunctor.first Product . parsePacketList
-        2 -> Bifunctor.first Minimum . parsePacketList
-        3 -> Bifunctor.first Maximum . parsePacketList
-        4 -> Bifunctor.first Value . parseValue
-        5 -> Bifunctor.first GreaterThan . parsePacketPair
-        6 -> Bifunctor.first LessThan . parsePacketPair
-        7 -> Bifunctor.first EqualTo . parsePacketPair
-        _ -> Bifunctor.first Sum . parsePacketList
+        1 -> first Product . parsePacketList
+        2 -> first Minimum . parsePacketList
+        3 -> first Maximum . parsePacketList
+        4 -> first Value . parseValue
+        5 -> first GreaterThan . parsePacketPair
+        6 -> first LessThan . parsePacketPair
+        7 -> first EqualTo . parsePacketPair
+        _ -> first Sum . parsePacketList
     typeID = binaryToInt $ take 3 binary
     rest = drop 3 binary
 
@@ -60,7 +60,7 @@ parsePacketPair s = case parsePacketList s of
   _ -> error $ "Invalid Pair: " ++ s
 
 parsePacketList :: String -> ([Packet], Int)
-parsePacketList binary = Bifunctor.second (+ 1) packetContent
+parsePacketList binary = second (+ 1) packetContent
   where
     packetContent =
       if head binary == '0'
@@ -85,8 +85,9 @@ parsePacketListLength binary = (packets, len + 15)
     packets = parsePackets [] len packetsBinary
     parsePackets packets 0 binary = reverse packets
     parsePackets packets remaining binary =
-      let (packet, len) = parsePacket binary
-       in parsePackets (packet : packets) (remaining - len) $ drop len binary
+      parsePackets (packet : packets) (remaining - len) $ drop len binary
+      where
+        (packet, len) = parsePacket binary
 
 parsePacketListNumber :: String -> ([Packet], Int)
 parsePacketListNumber binary = (packets, len + 11)
@@ -96,10 +97,11 @@ parsePacketListNumber binary = (packets, len + 11)
     (packets, len) = parsePackets [] number packetsBinary
     parsePackets packets 0 binary = (reverse packets, 0)
     parsePackets packets remaining binary =
-      let (packet, newLen) = parsePacket binary
-       in Bifunctor.second (+ newLen) $
-            parsePackets (packet : packets) (remaining - 1) $
-              drop newLen binary
+      second (+ newLen) $ parsePackets newPackets (remaining - 1) newBinary
+      where
+        newPackets = packet : packets
+        newBinary = drop newLen binary
+        (packet, newLen) = parsePacket binary
 
 hexToBinary :: String -> String
 hexToBinary = foldr foldIntoBinary ""

@@ -84,6 +84,7 @@ secondProblem :: Area -> Int
 secondProblem area = length $ filter (validLaunch area) possibleVelocities
   where
     possibleVelocities =
-      concatMap (\a -> map (a,) possibleYVelocities) possibleXVelocities
-    possibleYVelocities = [minYVelocity area .. maxYVelocity area]
-    possibleXVelocities = [minXVelocity area .. maxXVelocity area]
+      [ (x, y)
+        | x <- [minXVelocity area .. maxXVelocity area],
+          y <- [minYVelocity area .. maxYVelocity area]
+      ]
