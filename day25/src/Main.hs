@@ -9,7 +9,7 @@ main = do
   testCucumbers <- readInput "day25/test_input"
   cucumbers <- readInput "day25/input"
   print $ "Problem input: " ++ show (firstProblem testCucumbers) ++ " == 58"
-  print $ "Problem input: " ++ show (firstProblem cucumbers) ++ " == *"
+  print $ "Problem input: " ++ show (firstProblem cucumbers) ++ " == 513"
   where
     readInput file = parseInput . lines <$> readFile file
 

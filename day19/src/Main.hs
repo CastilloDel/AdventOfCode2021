@@ -11,7 +11,7 @@ main = do
   beacons <- readInput "day19/input"
   print $ "Test input: " ++ show (firstProblem testBeacons) ++ " == 79"
   print $ "Problem input: " ++ show (firstProblem beacons) ++ " == 459"
-  print $ "Test input: " ++ show (firstProblem testBeacons) ++ " == 3621"
+  print $ "Test input: " ++ show (secondProblem testBeacons) ++ " == 3621"
   print $ "Problem input: " ++ show (secondProblem beacons) ++ " == 19130"
   where
     readInput file =

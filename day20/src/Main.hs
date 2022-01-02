@@ -41,6 +41,7 @@ problem n algorithm image =
 step :: Algorithm -> Image -> Bool -> (Image, Bool)
 step algorithm image def = (Matrix.fromLists newImage, newDefault)
   where
+    -- 511 is the index of the last value of the algorithm
     newDefault = if def then algorithm Array.! 511 else algorithm Array.! 0
     newImage = map (map getNewVal) $ groupBy (\a b -> fst a == fst b) newIndexes
     getNewVal = calculateNewValue algorithm image def
